@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-//[START modelarmor_quickstart]
+//[START modelarmor_create_template_with_metadata]
 using Google.Api.Gax.ResourceNames;
 using Google.Cloud.ModelArmor.V1;
 
@@ -78,7 +78,6 @@ public class CreateTemplateWithMetadataSample
         {
             IgnorePartialInvocationFailures = true,
             LogSanitizeOperations = true,
-            CustomPromptSafetyErrorCode = 500,
         };
 
         // Create the template with filter config and metadata
@@ -104,4 +103,4 @@ public class CreateTemplateWithMetadataSample
         return createdTemplate;
     }
 }
-// [END modelarmor_create_template]
+// [END modelarmor_create_template_with_metadata]
