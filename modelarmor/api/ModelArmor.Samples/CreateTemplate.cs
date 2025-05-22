@@ -38,7 +38,11 @@ public class CreateTemplateSample
         // Build the parent resource name.
         LocationName parent = LocationName.FromProjectLocation(projectId, locationId);
 
-        // Build the Model Armor template with preferred filters
+        // Build the Model Armor template with your preferred filters.
+        // For more details on filters, please refer to the following doc:
+        // https://cloud.google.com/security-command-center/docs/key-concepts-model-armor#ma-filters
+        // Configure Responsible AI filter with multiple categories and their confidence
+        // levels.
         RaiFilterSettings raiFilterSettings = new RaiFilterSettings();
         raiFilterSettings.RaiFilters.Add(
             new RaiFilterSettings.Types.RaiFilter
@@ -85,9 +89,8 @@ public class CreateTemplateSample
 
         // Send the request
         Template createdTemplate = client.CreateTemplate(request);
-        System.Console.WriteLine(
-            $"Successfully created template with name: {createdTemplate.Name}"
-        );
+        System.Console.WriteLine($"Created template: {createdTemplate.Name}");
+
         return createdTemplate;
     }
 }
