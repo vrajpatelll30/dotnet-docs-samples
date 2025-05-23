@@ -36,9 +36,11 @@ namespace ModelArmor.Samples.Tests
         [Fact]
         public void Runs()
         {
-            // Generate a unique template ID for testing
-            string templateId =
-                $"test-template-{System.Guid.NewGuid().ToString("N").Substring(0, 8)}";
+            // Get TemplateName for testing
+            TemplateName templateName = _fixture.CreateTemplateName();
+
+            // Get template ID from TemplateName
+            string templateId = templateName.TemplateId;
 
             // Run the sample
             Template template = _sample.CreateTemplate(
@@ -89,7 +91,6 @@ namespace ModelArmor.Samples.Tests
             try
             {
                 _fixture.Client.DeleteTemplate(new DeleteTemplateRequest { Name = template.Name });
-                _output.WriteLine($"Deleted template: {template.Name}");
             }
             catch (System.Exception ex)
             {

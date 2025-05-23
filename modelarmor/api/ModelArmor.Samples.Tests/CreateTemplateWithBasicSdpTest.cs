@@ -40,10 +40,11 @@ namespace ModelArmor.Samples.Tests
             string projectId = _fixture.ProjectId;
             string locationId = _fixture.LocationId;
 
-            // Generate a unique template ID for testing
-            string templateId = $"test-basic-sdp-{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+            // Get TemplateName for testing
+            TemplateName templateName = _fixture.CreateTemplateName();
 
-            _output.WriteLine($"Creating template with Basic SDP: {templateId}");
+            // Get template ID from TemplateName
+            string templateId = templateName.TemplateId;
 
             // Run the sample
             Template template = _sample.CreateTemplateWithBasicSdp(
@@ -51,9 +52,6 @@ namespace ModelArmor.Samples.Tests
                 locationId: locationId,
                 templateId: templateId
             );
-
-            // Output template details
-            _output.WriteLine($"Created template: {template.Name}");
 
             // Verify the template was created successfully
             Assert.NotNull(template);
@@ -75,7 +73,6 @@ namespace ModelArmor.Samples.Tests
             try
             {
                 _fixture.Client.DeleteTemplate(new DeleteTemplateRequest { Name = template.Name });
-                _output.WriteLine($"Deleted template: {template.Name}");
             }
             catch (Exception ex)
             {

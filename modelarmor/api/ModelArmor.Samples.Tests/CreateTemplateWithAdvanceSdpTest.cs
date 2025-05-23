@@ -46,8 +46,11 @@ namespace ModelArmor.Samples.Tests
             string projectId = _fixture.ProjectId;
             string locationId = _fixture.LocationId;
 
-            // Generate a unique template ID for testing
-            string templateId = $"test-adv-sdp-{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+            // Get TemplateName for testing
+            TemplateName templateName = _fixture.CreateTemplateName();
+
+            // Get template ID from TemplateName
+            string templateId = templateName.TemplateId;
 
             // Build the inspect template name.
             string inspectTemplateName =
@@ -56,10 +59,6 @@ namespace ModelArmor.Samples.Tests
             // Build the deidentify template name.
             string deidentifyTemplateName =
                 $"projects/{projectId}/locations/{locationId}/deidentifyTemplates/{deidentifyTemplateId}";
-
-            _output.WriteLine($"Creating template with Advanced SDP: {templateId}");
-            _output.WriteLine($"Using inspect template: {inspectTemplateId}");
-            _output.WriteLine($"Using deidentify template: {deidentifyTemplateId}");
 
             // Run the sample
             Template template = _sample.CreateTemplateWithAdvancedSdp(
@@ -95,7 +94,6 @@ namespace ModelArmor.Samples.Tests
             try
             {
                 _fixture.Client.DeleteTemplate(new DeleteTemplateRequest { Name = template.Name });
-                _output.WriteLine($"Deleted template: {template.Name}");
             }
             catch (Exception ex)
             {
