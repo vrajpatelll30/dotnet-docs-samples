@@ -200,6 +200,35 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
         return template;
     }
 
+    public Template ConfigureBaseTemplateWithMetadata()
+    {
+        // First create a base template
+        Template template = ConfigureBaseTemplate();
+
+        // Configure Metadata settings
+        Template.Types.TemplateMetadata templateMetadata = new Template.Types.TemplateMetadata
+        {
+            LogTemplateOperations = true,
+            LogSanitizeOperations = true,
+        };
+        template.TemplateMetadata = templateMetadata;
+
+        return template;
+    }
+
+    // Create a template with labels
+    public Template ConfigureBaseTemplateWithLabels()
+    {
+        // First create a base template
+        Template template = ConfigureBaseTemplate();
+
+        // Add labels
+        template.Labels.Add("key1", "value1");
+        template.Labels.Add("key2", "value2");
+
+        return template;
+    }
+
     // Create a template on GCP and register it for cleanup
     public Template CreateTemplate(Template templateConfig, string templateId = null)
     {
@@ -243,6 +272,20 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
     public Template CreateAdvancedSdpTemplate(string templateId = null)
     {
         Template templateConfig = ConfigureAdvancedSdpTemplate();
+        return CreateTemplate(templateConfig, templateId);
+    }
+
+    // Create a template with metadata on GCP
+    public Template CreateTemplateWithMetadata(string templateId = null)
+    {
+        Template templateConfig = ConfigureBaseTemplateWithMetadata();
+        return CreateTemplate(templateConfig, templateId);
+    }
+
+    // Create a template with labels on GCP
+    public Template CreateTemplateWithLabels(string templateId = null)
+    {
+        Template templateConfig = ConfigureBaseTemplateWithLabels();
         return CreateTemplate(templateConfig, templateId);
     }
 
