@@ -30,7 +30,7 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
     private const string EnvDeidentifyTemplateId = "GOOGLE_CLOUD_DEIDENTIFY_TEMPLATE_ID";
 
     // Public properties
-    public ModelArmorClient Client { get; }
+    public Google.Cloud.ModelArmor.V1.ModelArmorClient Client { get; }
     public string ProjectId { get; }
     public string LocationId { get; }
     public string InspectTemplateId { get; }
@@ -55,8 +55,14 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
             Environment.GetEnvironmentVariable(EnvDeidentifyTemplateId)
             ?? "dlp-deidentify-template-1";
 
-        // Create client
-        Client = ModelArmorClient.Create();
+        // Create client builder
+        ModelArmorClientBuilder clientBuilder = new ModelArmorClientBuilder
+        {
+            Endpoint = $"modelarmor.{LocationId}.rep.googleapis.com",
+        };
+
+        // Create the client.
+        Client = clientBuilder.Build();
     }
 
     private string GetRequiredEnvVar(string name)
