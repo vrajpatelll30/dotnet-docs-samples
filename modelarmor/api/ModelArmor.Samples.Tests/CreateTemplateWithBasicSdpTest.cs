@@ -68,17 +68,6 @@ namespace ModelArmor.Samples.Tests
                 SdpBasicConfig.Types.SdpBasicConfigEnforcement.Enabled,
                 basicConfig.FilterEnforcement
             );
-
-            // Clean up - delete the template (if needed)
-            try
-            {
-                _fixture.Client.DeleteTemplate(new DeleteTemplateRequest { Name = template.Name });
-            }
-            catch (Exception ex)
-            {
-                _output.WriteLine($"Error during cleanup: {ex.Message}");
-                // Don't fail the test if cleanup fails
-            }
         }
     }
 }

@@ -86,16 +86,6 @@ namespace ModelArmor.Samples.Tests
                     f.FilterType == RaiFilterType.Harassment
                     && f.ConfidenceLevel == DetectionConfidenceLevel.MediumAndAbove
             );
-
-            // Clean up - delete the template
-            try
-            {
-                _fixture.Client.DeleteTemplate(new DeleteTemplateRequest { Name = template.Name });
-            }
-            catch (System.Exception ex)
-            {
-                _output.WriteLine($"Error during cleanup: {ex.Message}");
-            }
         }
     }
 }

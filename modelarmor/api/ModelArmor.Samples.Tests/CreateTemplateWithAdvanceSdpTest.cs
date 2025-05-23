@@ -96,17 +96,6 @@ namespace ModelArmor.Samples.Tests
             // Verify the inspect and deidentify template names
             Assert.Equal(inspectTemplateName, advancedConfig.InspectTemplate);
             Assert.Equal(deidentifyTemplateName, advancedConfig.DeidentifyTemplate);
-
-            // Clean up - delete the template
-            try
-            {
-                _fixture.Client.DeleteTemplate(new DeleteTemplateRequest { Name = template.Name });
-            }
-            catch (Exception ex)
-            {
-                _output.WriteLine($"Error during cleanup: {ex.Message}");
-                // Don't fail the test if cleanup fails
-            }
         }
     }
 }
