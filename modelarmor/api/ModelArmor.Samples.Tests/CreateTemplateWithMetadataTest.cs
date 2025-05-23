@@ -41,8 +41,11 @@ namespace ModelArmor.Samples.Tests
             string projectId = _fixture.ProjectId;
             string locationId = _fixture.LocationId;
 
-            // Generate a unique template ID for testing
-            string templateId = $"test-metadata-{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+            // Get TemplateName for testing
+            TemplateName templateName = _fixture.CreateTemplateName();
+
+            // Get template ID from TemplateName
+            string templateId = templateName.TemplateId;
 
             // Run the sample
             Template createdTemplate = _sample.CreateTemplateWithMetadata(
@@ -97,20 +100,8 @@ namespace ModelArmor.Samples.Tests
 
             // Verify the metadata
             Assert.NotNull(createdTemplate.TemplateMetadata);
-            Assert.True(createdTemplate.TemplateMetadata.IgnorePartialInvocationFailures);
+            Assert.True(createdTemplate.TemplateMetadata.LogTemplateOperations);
             Assert.True(createdTemplate.TemplateMetadata.LogSanitizeOperations);
-            Assert.Equal(500, createdTemplate.TemplateMetadata.CustomPromptSafetyErrorCode);
-
-            // Clean up - delete the template
-            try
-            {
-                _fixture.Client.DeleteTemplate(createdTemplate.Name);
-            }
-            catch (Exception ex)
-            {
-                _output.WriteLine($"Error during cleanup: {ex.Message}");
-                // Don't fail the test if cleanup fails
-            }
         }
     }
 }

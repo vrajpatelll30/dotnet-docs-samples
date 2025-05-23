@@ -41,8 +41,11 @@ namespace ModelArmor.Samples.Tests
             string projectId = _fixture.ProjectId;
             string locationId = _fixture.LocationId;
 
-            // Generate a unique template ID for testing
-            string templateId = $"test-labels-{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+            // Get TemplateName for testing
+            TemplateName templateName = _fixture.CreateTemplateName();
+
+            // Get template ID from TemplateName
+            string templateId = templateName.TemplateId;
 
             // Run the sample
             Template createdTemplate = _sample.CreateTemplateWithLabels(
@@ -76,17 +79,6 @@ namespace ModelArmor.Samples.Tests
             Assert.Equal(2, retrievedTemplate.Labels.Count);
             Assert.Equal("value1", retrievedTemplate.Labels["key1"]);
             Assert.Equal("value2", retrievedTemplate.Labels["key2"]);
-
-            // Clean up - delete the template
-            try
-            {
-                client.DeleteTemplate(retrievedTemplate.Name);
-            }
-            catch (Exception ex)
-            {
-                _output.WriteLine($"Error during cleanup: {ex.Message}");
-                // Don't fail the test if cleanup fails
-            }
         }
     }
 }

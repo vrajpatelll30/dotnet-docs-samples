@@ -76,7 +76,7 @@ public class CreateTemplateWithMetadataSample
         // https://cloud.google.com/security-command-center/docs/reference/model-armor/rest/v1/projects.locations.templates#templatemetadata
         Template.Types.TemplateMetadata templateMetadata = new Template.Types.TemplateMetadata
         {
-            IgnorePartialInvocationFailures = true,
+            LogTemplateOperations = true,
             LogSanitizeOperations = true,
         };
 
