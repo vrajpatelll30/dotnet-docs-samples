@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using Google.Api.Gax.ResourceNames;
@@ -10,15 +26,17 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
     // Environment variable names
     private const string EnvProjectId = "GOOGLE_PROJECT_ID";
     private const string EnvLocation = "GOOGLE_CLOUD_LOCATION";
+    private const string EnvInspectTemplateId = "GOOGLE_CLOUD_INSPECT_TEMPLATE_ID";
+    private const string EnvDeidentifyTemplateId = "GOOGLE_CLOUD_DEIDENTIFY_TEMPLATE_ID";
 
     // Public properties
     public ModelArmorClient Client { get; }
     public string ProjectId { get; }
     public string LocationId { get; }
+    public string InspectTemplateId { get; }
+    public string DeidentifyTemplateId { get; }
 
-    // Template IDs for SDP testing
-    public string InspectTemplateId => "dlp-inspect-template-1";
-    public string DeidentifyTemplateId => "dlp-deidentify-template-1";
+    // // Template IDs for SDP testing
 
     // Track resources to clean up
     private readonly List<TemplateName> _resourcesToCleanup = new List<TemplateName>();
@@ -29,7 +47,13 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
         ProjectId = GetRequiredEnvVar(EnvProjectId);
 
         // Get location ID from environment variable or use default
-        LocationId = GetRequiredEnvVar(EnvLocation) ?? "us-central1";
+        LocationId = Environment.GetEnvironmentVariable(EnvLocation) ?? "us-central1";
+
+        InspectTemplateId =
+            Environment.GetEnvironmentVariable(EnvInspectTemplateId) ?? "dlp-inspect-template-1";
+        DeidentifyTemplateId =
+            Environment.GetEnvironmentVariable(EnvDeidentifyTemplateId)
+            ?? "dlp-deidentify-template-1";
 
         // Create client
         Client = ModelArmorClient.Create();
