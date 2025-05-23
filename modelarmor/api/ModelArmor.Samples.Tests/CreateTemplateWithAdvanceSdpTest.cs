@@ -15,6 +15,7 @@
 */
 
 using System;
+using Google.Cloud.Dlp.V2;
 using Google.Cloud.ModelArmor.V1;
 using Xunit;
 using Xunit.Abstractions;
@@ -53,12 +54,18 @@ namespace ModelArmor.Samples.Tests
             string templateId = templateName.TemplateId;
 
             // Build the inspect template name.
-            string inspectTemplateName =
-                $"projects/{projectId}/locations/{locationId}/inspectTemplates/{inspectTemplateId}";
+            string inspectTemplateName = DeidentifyTemplateName
+                .FormatProjectLocationDeidentifyTemplate(projectId, locationId, inspectTemplateId)
+                .ToString();
 
             // Build the deidentify template name.
-            string deidentifyTemplateName =
-                $"projects/{projectId}/locations/{locationId}/deidentifyTemplates/{deidentifyTemplateId}";
+            string deidentifyTemplateName = DeidentifyTemplateName
+                .FormatProjectLocationDeidentifyTemplate(
+                    projectId,
+                    locationId,
+                    deidentifyTemplateId
+                )
+                .ToString();
 
             // Run the sample
             Template template = _sample.CreateTemplateWithAdvancedSdp(
