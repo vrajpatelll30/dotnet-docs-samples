@@ -41,6 +41,9 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
     // Track resources to clean up
     private readonly List<TemplateName> _resourcesToCleanup = new List<TemplateName>();
 
+    public string InspectTemplateId => "dlp-inspect-template-1";
+    public string DeidentifyTemplateId => "dlp-deidentify-template-1";
+
     public ModelArmorFixture()
     {
         // Get the Google Cloud ProjectId
