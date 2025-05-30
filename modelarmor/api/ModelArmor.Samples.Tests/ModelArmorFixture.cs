@@ -226,6 +226,36 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
         return template;
     }
 
+    public Template ConfigureTemplateWithMaliciousUri()
+    {
+        Template template = ConfigureBaseTemplate();
+
+        template.FilterConfig.MaliciousUriFilterSettings = new MaliciousUriFilterSettings
+        {
+            FilterEnforcement = MaliciousUriFilterSettings
+                .Types
+                .MaliciousUriFilterEnforcement
+                .Enabled,
+        };
+
+        return template;
+    }
+
+    public Template ConfigureTemplateWithPiAndJailbreak()
+    {
+        Template template = ConfigureBaseTemplate();
+
+        template.FilterConfig.PiAndJailbreakFilterSettings = new PiAndJailbreakFilterSettings
+        {
+            ConfidenceLevel = DetectionConfidenceLevel.MediumAndAbove,
+            FilterEnforcement = PiAndJailbreakFilterSettings
+                .Types
+                .PiAndJailbreakFilterEnforcement
+                .Enabled,
+        };
+        return template;
+    }
+
     // Create a template on GCP and register it for cleanup
     public Template CreateTemplate(Template templateConfig, string templateId = null)
     {
@@ -283,6 +313,18 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
     public Template CreateTemplateWithLabels(string templateId = null)
     {
         Template templateConfig = ConfigureBaseTemplateWithLabels();
+        return CreateTemplate(templateConfig, templateId);
+    }
+
+    public Template CreateTemplateWithMaliciousUri(string templateId = null)
+    {
+        Template templateConfig = ConfigureTemplateWithMaliciousUri();
+        return CreateTemplate(templateConfig, templateId);
+    }
+
+    public Template CreateTemplateWithPiAndJailbreak(string templateId = null)
+    {
+        Template templateConfig = ConfigureTemplateWithPiAndJailbreak();
         return CreateTemplate(templateConfig, templateId);
     }
 
