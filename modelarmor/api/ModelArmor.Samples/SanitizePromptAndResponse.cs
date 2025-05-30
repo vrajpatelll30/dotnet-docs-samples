@@ -102,16 +102,7 @@ namespace ModelArmor.Samples
             };
         }
 
-        /// <summary>
-        /// Sanitizes both user prompt and model response with detailed handling of SDP findings.
-        /// </summary>
-        /// <param name="projectId">Google Cloud project ID</param>
-        /// <param name="locationId">Location ID (e.g., us-central1)</param>
-        /// <param name="templateId">Template ID for sanitization</param>
-        /// <param name="userPrompt">User prompt to sanitize</param>
-        /// <param name="modelResponse">Model response to sanitize</param>
-        /// <returns>A dictionary containing both sanitization results and deidentified content</returns>
-        public Dictionary<string, object> SanitizePromptAndResponseWithSdp(
+        public SanitizeModelResponseResponse SanitizePromptAndResponseWithSdp(
             string projectId = "my-project",
             string locationId = "us-central1",
             string templateId = "my-template",
@@ -136,63 +127,22 @@ namespace ModelArmor.Samples
             );
 
             // Prepare and send the user prompt sanitization request
-            SanitizeUserPromptRequest promptRequest = new SanitizeUserPromptRequest
+            SanitizeModelResponseRequest request = new SanitizeModelResponseRequest
             {
-                TemplateName = templateName,
-                UserPromptData = new DataItem { Text = userPrompt },
-            };
-            SanitizeUserPromptResponse promptResponse = client.SanitizeUserPrompt(promptRequest);
-
-            // Prepare and send the model response sanitization request
-            SanitizeModelResponseRequest responseRequest = new SanitizeModelResponseRequest
-            {
-                TemplateName = templateName,
+                TemplateName = TemplateName.FromProjectLocationTemplate(
+                    projectId,
+                    locationId,
+                    templateId
+                ),
                 ModelResponseData = new DataItem { Text = modelResponse },
+                UserPrompt = userPrompt,
             };
+
             SanitizeModelResponseResponse modelResponseResult = client.SanitizeModelResponse(
-                responseRequest
+                request
             );
 
-            _out
-            
-            // Extract deidentified content if available
-            string deidentifiedPrompt = userPrompt;
-            string deidentifiedResponse = modelResponse;
-
-            // Process user prompt SDP results
-            if (promptResponse.SanitizationResult.FilterResults.ContainsKey("sdp"))
-            {
-                var sdpResult = promptResponse.SanitizationResult.FilterResults["sdp"];
-                if (sdpResult.SdpFilterResult?.DeidentifyResult != null)
-                {
-                    deidentifiedPrompt = sdpResult.SdpFilterResult.DeidentifyResult.Data.Text;
-                }
-            }
-
-            // Process model response SDP results
-            if (modelResponseResult.SanitizationResult.FilterResults.ContainsKey("sdp"))
-            {
-                var sdpResult = modelResponseResult.SanitizationResult.FilterResults["sdp"];
-                if (sdpResult.SdpFilterResult?.DeidentifyResult != null)
-                {
-                    deidentifiedResponse = sdpResult.SdpFilterResult.DeidentifyResult.Data.Text;
-                }
-            }
-
-            // Print sanitization results
-            Console.WriteLine($"Original user prompt: {userPrompt}");
-            Console.WriteLine($"Deidentified user prompt: {deidentifiedPrompt}");
-            Console.WriteLine($"Original model response: {modelResponse}");
-            Console.WriteLine($"Deidentified model response: {deidentifiedResponse}");
-
-            // Return results in a dictionary
-            return new Dictionary<string, object>
-            {
-                { "promptSanitizationResult", promptResponse },
-                { "responseSanitizationResult", modelResponseResult },
-                { "deidentifiedPrompt", deidentifiedPrompt },
-                { "deidentifiedResponse", deidentifiedResponse },
-            };
+            return modelResponseResult;
         }
     }
 }
