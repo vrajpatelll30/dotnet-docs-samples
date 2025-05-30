@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Google.Api.Gax.ResourceNames;
+using Google.Cloud.Dlp.V2;
 using Google.Cloud.ModelArmor.V1;
 using Xunit;
 
@@ -26,15 +27,15 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
     // Environment variable names
     private const string EnvProjectId = "GOOGLE_PROJECT_ID";
     private const string EnvLocation = "GOOGLE_CLOUD_LOCATION";
-    private const string EnvInspectTemplateId = "GOOGLE_CLOUD_INSPECT_TEMPLATE_ID";
-    private const string EnvDeidentifyTemplateId = "GOOGLE_CLOUD_DEIDENTIFY_TEMPLATE_ID";
+    private const string EnvInspectTemplateName = "GOOGLE_CLOUD_INSPECT_TEMPLATE_ID";
+    private const string EnvDeidentifyTemplateName = "GOOGLE_CLOUD_DEIDENTIFY_TEMPLATE_ID";
 
     // Public properties
     public Google.Cloud.ModelArmor.V1.ModelArmorClient Client { get; }
     public string ProjectId { get; }
     public string LocationId { get; }
-    public string InspectTemplateId { get; }
-    public string DeidentifyTemplateId { get; }
+    public string InspectTemplateName { get; }
+    public string DeidentifyTemplateName { get; }
 
     // // Template IDs for SDP testing
 
@@ -49,11 +50,77 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
         // Get location ID from environment variable or use default
         LocationId = Environment.GetEnvironmentVariable(EnvLocation) ?? "us-central1";
 
-        InspectTemplateId =
-            Environment.GetEnvironmentVariable(EnvInspectTemplateId) ?? "dlp-inspect-template-1";
-        DeidentifyTemplateId =
-            Environment.GetEnvironmentVariable(EnvDeidentifyTemplateId)
-            ?? "dlp-deidentify-template-1";
+        // Get template ID from environment variable or generate a unique one
+        DlpServiceClient dlpServiceClient = DlpServiceClient.Create();
+
+        // Info Types:
+        // https://cloud.google.com/sensitive-data-protection/docs/infotypes-reference
+        List<InfoType> infoTypes = new List<string>
+        {
+            "PHONE_NUMBER",
+            "EMAIL_ADDRESS",
+            "US_INDIVIDUAL_TAXPAYER_IDENTIFICATION_NUMBER",
+        }
+            .Select(it => new InfoType { Name = it })
+            .ToList();
+
+        InspectConfig inspectConfig = new InspectConfig { InfoTypes = { infoTypes } };
+
+        InspectTemplate inspectTemplate = new InspectTemplate { InspectConfig = inspectConfig };
+
+        CreateInspectTemplateRequest createInspectTemplateRequest = new CreateInspectTemplateRequest
+        {
+            ParentAsLocationName = new LocationName(ProjectId, LocationId),
+            InspectTemplate = inspectTemplate,
+            TemplateId = GenerateUniqueId(),
+        };
+
+        InspectTemplateName = dlpServiceClient
+            .CreateInspectTemplate(createInspectTemplateRequest)
+            .Name;
+
+        // DeidentifyTemplateName =
+        //     Environment.GetEnvironmentVariable(EnvDeidentifyTemplateName)
+        //     ?? "dlp-deidentify-template-1";
+
+        var replaceValueConfig = new ReplaceValueConfig
+        {
+            NewValue = new Value { StringValue = "[REDACTED]" },
+        };
+
+        // Define type of deidentification.
+        var primitiveTransformation = new PrimitiveTransformation
+        {
+            ReplaceConfig = replaceValueConfig,
+        };
+
+        // Associate deidentification type with info type.
+        var transformation = new InfoTypeTransformation
+        {
+            PrimitiveTransformation = primitiveTransformation,
+        };
+
+        // Construct the configuration for the Redact request and list all desired transformations.
+        var redactConfig = new DeidentifyConfig
+        {
+            InfoTypeTransformations = new InfoTypeTransformations
+            {
+                Transformations = { transformation },
+            },
+        };
+
+        var deidentifyTemplate = new DeidentifyTemplate { DeidentifyConfig = redactConfig };
+
+        var createDeidentifyTemplateRequest = new CreateDeidentifyTemplateRequest
+        {
+            ParentAsLocationName = LocationName.FromProjectLocation(ProjectId, LocationId),
+            TemplateId = GenerateUniqueId(),
+            DeidentifyTemplate = deidentifyTemplate,
+        };
+
+        DeidentifyTemplateName = dlpServiceClient.CreateDeidentifyTemplate(
+            createDeidentifyTemplateRequest
+        );
 
         // Create client builder
         ModelArmorClientBuilder clientBuilder = new ModelArmorClientBuilder
@@ -94,6 +161,13 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
                 // Ignore errors during cleanup
             }
         }
+        DlpServiceClient dlpServiceClient = DlpServiceClient.Create();
+        dlpServiceClient.DeleteInspectTemplate(
+            new DeleteInspectTemplateRequest { Name = InspectTemplateName }
+        );
+        dlpServiceClient.DeleteInspectTemplate(
+            new DeleteInspectTemplateRequest { Name = DeidentifyTemplateName }
+        );
     }
 
     public void RegisterTemplateForCleanup(TemplateName templateName)
@@ -175,17 +249,17 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
         // First create a base template
         Template template = ConfigureBaseTemplate();
 
-        // Add Advanced SDP configuration
-        string inspectTemplateName =
-            $"projects/{ProjectId}/locations/{LocationId}/inspectTemplates/{InspectTemplateId}";
+        // // Add Advanced SDP configuration
+        // string inspectTemplateName =
+        //     $"projects/{ProjectId}/locations/{LocationId}/inspectTemplates/{InspectTemplateName}";
 
-        string deidentifyTemplateName =
-            $"projects/{ProjectId}/locations/{LocationId}/deidentifyTemplates/{DeidentifyTemplateId}";
+        // string deidentifyTemplateName =
+        //     $"projects/{ProjectId}/locations/{LocationId}/deidentifyTemplates/{DeidentifyTemplateName}";
 
         SdpAdvancedConfig advancedSdpConfig = new SdpAdvancedConfig
         {
-            InspectTemplate = inspectTemplateName,
-            DeidentifyTemplate = deidentifyTemplateName,
+            InspectTemplate = InspectTemplateName,
+            DeidentifyTemplate = DeidentifyTemplateName,
         };
 
         SdpFilterSettings sdpSettings = new SdpFilterSettings
