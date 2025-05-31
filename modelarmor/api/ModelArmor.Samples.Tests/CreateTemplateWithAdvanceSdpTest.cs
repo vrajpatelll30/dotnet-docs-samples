@@ -41,8 +41,8 @@ namespace ModelArmor.Samples.Tests
         [Fact]
         public void CreateTemplateWithAdvancedSdpTest()
         {
-            string inspectTemplateName = _fixture.InspectTemplateName;
-            string deidentifyTemplateName = _fixture.DeidentifyTemplateName;
+            string inspectTemplateId = _fixture.InspectTemplateId;
+            string deidentifyTemplateId = _fixture.DeidentifyTemplateId;
 
             string projectId = _fixture.ProjectId;
             string locationId = _fixture.LocationId;
@@ -54,26 +54,26 @@ namespace ModelArmor.Samples.Tests
             string templateId = templateName.TemplateId;
 
             // Build the inspect template name.
-            // string inspectTemplateName = DeidentifyTemplateName
-            //     .FormatProjectLocationDeidentifyTemplate(projectId, locationId, inspectTemplateId)
-            //     .ToString();
+            string inspectTemplateName = DeidentifyTemplateName
+                .FormatProjectLocationDeidentifyTemplate(projectId, locationId, inspectTemplateId)
+                .ToString();
 
             // Build the deidentify template name.
-            // string deidentifyTemplateName = DeidentifyTemplateName
-            //     .FormatProjectLocationDeidentifyTemplate(
-            //         projectId,
-            //         locationId,
-            //         deidentifyTemplateName.DeidentifyTemplateId
-            //     )
-            //     .ToString();
+            string deidentifyTemplateName = DeidentifyTemplateName
+                .FormatProjectLocationDeidentifyTemplate(
+                    projectId,
+                    locationId,
+                    deidentifyTemplateId
+                )
+                .ToString();
 
             // Run the sample
             Template template = _sample.CreateTemplateWithAdvancedSdp(
                 projectId: projectId,
                 locationId: locationId,
                 templateId: templateId,
-                InspectTemplateId: InspectTemplateName.InspectTemplateId,
-                deidentifyTemplateId: DeidentifyTemplateName.DeidentifyTemplateId
+                inspectTemplateId: inspectTemplateId,
+                deidentifyTemplateId: deidentifyTemplateId
             );
 
             // Output template details
@@ -91,10 +91,7 @@ namespace ModelArmor.Samples.Tests
             // Verify the advanced SDP config
             var advancedConfig = template.FilterConfig.SdpSettings.AdvancedConfig;
             Assert.Contains(inspectTemplateId, advancedConfig.InspectTemplate);
-            Assert.Contains(
-                deidentifyTemplateName.DeidentifyTemplateId,
-                advancedConfig.DeidentifyTemplate
-            );
+            Assert.Contains(deidentifyTemplateId, advancedConfig.DeidentifyTemplate);
 
             // Verify the inspect and deidentify template names
             Assert.Equal(inspectTemplateName, advancedConfig.InspectTemplate);
