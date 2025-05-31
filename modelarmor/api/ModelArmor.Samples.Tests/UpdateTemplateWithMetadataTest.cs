@@ -39,9 +39,7 @@ namespace ModelArmor.Samples.Tests
         {
             // Create a template to update
             Template originalTemplate = _fixture.CreateTemplateWithMetadata();
-            _output.WriteLine(
-                $"RaiSettings: {originalTemplate.FilterConfig.RaiSettings.RaiFilters}"
-            );
+
             var originalRaiFilters = originalTemplate.FilterConfig.RaiSettings.RaiFilters;
 
             // Verify the original filter settings match what we expect

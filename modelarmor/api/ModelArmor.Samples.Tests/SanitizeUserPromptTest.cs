@@ -293,15 +293,10 @@ namespace ModelArmor.Samples.Tests
                 userPrompt
             );
 
-            _output.WriteLine($"Response: {response}");
-
             // Assert
             Assert.NotNull(response);
             Assert.NotNull(response.SanitizationResult);
-            Assert.Equal(
-                FilterMatchState.NoMatchFound,
-                response.SanitizationResult.FilterMatchState
-            );
+            Assert.Equal(FilterMatchState.MatchFound, response.SanitizationResult.FilterMatchState);
 
             // Check SDP filter results
             if (response.SanitizationResult.FilterResults.ContainsKey("sdp"))

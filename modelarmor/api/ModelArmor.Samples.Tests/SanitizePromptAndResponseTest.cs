@@ -164,9 +164,6 @@ namespace ModelArmor.Samples.Tests
                         userPrompt,
                         modelResponse
                     );
-                _output.WriteLine(
-                    $"Sanitization result: {sanitizedResponse.SanitizationResult.FilterMatchState}"
-                );
 
                 // Assert
                 Assert.NotNull(sanitizedResponse);
@@ -178,23 +175,18 @@ namespace ModelArmor.Samples.Tests
                     == FilterMatchState.MatchFound
                 )
                 {
-                    _output.WriteLine("Filter match found as expected");
-
                     // If SDP filter results are available, check them
                     if (sanitizedResponse.SanitizationResult.FilterResults.ContainsKey("sdp"))
                     {
                         var sdpFilterResult = sanitizedResponse.SanitizationResult.FilterResults[
                             "sdp"
                         ];
-                        _output.WriteLine($"SDP filter result available: {sdpFilterResult}");
 
                         // If deidentify result is available, check it
                         if (sdpFilterResult.SdpFilterResult?.DeidentifyResult != null)
                         {
-                            _output.WriteLine("Deidentify result available");
                             string deidentifiedText =
                                 sdpFilterResult.SdpFilterResult.DeidentifyResult.Data?.Text ?? "";
-                            _output.WriteLine($"Deidentified text: {deidentifiedText}");
 
                             // Verify email is redacted in deidentified text if available
                             if (!string.IsNullOrEmpty(deidentifiedText))

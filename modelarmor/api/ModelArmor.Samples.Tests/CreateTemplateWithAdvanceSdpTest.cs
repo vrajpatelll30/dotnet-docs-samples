@@ -76,9 +76,6 @@ namespace ModelArmor.Samples.Tests
                 deidentifyTemplateId: deidentifyTemplateId
             );
 
-            // Output template details
-            _output.WriteLine($"Created template: {template.Name}");
-
             // Verify the template was created successfully
             Assert.NotNull(template);
             Assert.Contains(templateId, template.Name);
