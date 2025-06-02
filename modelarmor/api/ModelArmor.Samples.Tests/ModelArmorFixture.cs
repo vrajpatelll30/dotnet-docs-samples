@@ -16,7 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Google.Api.Gax.ResourceNames;
+using Google.Cloud.Dlp.V2;
 using Google.Cloud.ModelArmor.V1;
 using Xunit;
 
@@ -31,6 +33,7 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
 
     // Public properties
     public Google.Cloud.ModelArmor.V1.ModelArmorClient Client { get; }
+    public DlpServiceClient DlpClient { get; }
     public string ProjectId { get; }
     public string LocationId { get; }
     public string InspectTemplateId { get; }
@@ -49,11 +52,73 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
         // Get location ID from environment variable or use default
         LocationId = Environment.GetEnvironmentVariable(EnvLocation) ?? "us-central1";
 
-        InspectTemplateId =
-            Environment.GetEnvironmentVariable(EnvInspectTemplateId) ?? "dlp-inspect-template-1";
-        DeidentifyTemplateId =
-            Environment.GetEnvironmentVariable(EnvDeidentifyTemplateId)
-            ?? "dlp-deidentify-template-1";
+        // Get template ID from environment variable or generate a unique one
+        DlpClient = DlpServiceClient.Create();
+
+        // Info Types:
+        // https://cloud.google.com/sensitive-data-protection/docs/infotypes-reference
+        List<InfoType> infoTypes = new List<string>
+        {
+            "PHONE_NUMBER",
+            "EMAIL_ADDRESS",
+            "US_INDIVIDUAL_TAXPAYER_IDENTIFICATION_NUMBER",
+        }
+            .Select(it => new InfoType { Name = it })
+            .ToList();
+
+        InspectConfig inspectConfig = new InspectConfig { InfoTypes = { infoTypes } };
+
+        InspectTemplate inspectTemplate = new InspectTemplate { InspectConfig = inspectConfig };
+
+        CreateInspectTemplateRequest createInspectTemplateRequest = new CreateInspectTemplateRequest
+        {
+            ParentAsLocationName = new LocationName(ProjectId, LocationId),
+            InspectTemplate = inspectTemplate,
+            TemplateId = GenerateUniqueId(),
+        };
+
+        InspectTemplateId = DlpClient
+            .CreateInspectTemplate(createInspectTemplateRequest)
+            .InspectTemplateName.InspectTemplateId;
+
+        var replaceValueConfig = new ReplaceValueConfig
+        {
+            NewValue = new Value { StringValue = "[REDACTED]" },
+        };
+
+        // Define type of deidentification.
+        var primitiveTransformation = new PrimitiveTransformation
+        {
+            ReplaceConfig = replaceValueConfig,
+        };
+
+        // Associate deidentification type with info type.
+        var transformation = new InfoTypeTransformations.Types.InfoTypeTransformation
+        {
+            PrimitiveTransformation = primitiveTransformation,
+        };
+
+        // Construct the configuration for the Redact request and list all desired transformations.
+        var redactConfig = new DeidentifyConfig
+        {
+            InfoTypeTransformations = new InfoTypeTransformations
+            {
+                Transformations = { transformation },
+            },
+        };
+
+        var deidentifyTemplate = new DeidentifyTemplate { DeidentifyConfig = redactConfig };
+
+        var createDeidentifyTemplateRequest = new CreateDeidentifyTemplateRequest
+        {
+            ParentAsLocationName = LocationName.FromProjectLocation(ProjectId, LocationId),
+            TemplateId = GenerateUniqueId(),
+            DeidentifyTemplate = deidentifyTemplate,
+        };
+
+        DeidentifyTemplateId = DlpClient
+            .CreateDeidentifyTemplate(createDeidentifyTemplateRequest)
+            .DeidentifyTemplateName.DeidentifyTemplateId;
 
         // Create client builder
         ModelArmorClientBuilder clientBuilder = new ModelArmorClientBuilder
@@ -94,6 +159,14 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
                 // Ignore errors during cleanup
             }
         }
+
+        // Delete created DLP templates
+        DlpClient.DeleteInspectTemplate(
+            $"projects/{ProjectId}/locations/{LocationId}/inspectTemplates/{InspectTemplateId}"
+        );
+        DlpClient.DeleteDeidentifyTemplate(
+            $"projects/{ProjectId}/locations/{LocationId}/deidentifyTemplates/{DeidentifyTemplateId}"
+        );
     }
 
     public void RegisterTemplateForCleanup(TemplateName templateName)
@@ -226,6 +299,36 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
         return template;
     }
 
+    public Template ConfigureTemplateWithMaliciousUri()
+    {
+        Template template = ConfigureBaseTemplate();
+
+        template.FilterConfig.MaliciousUriFilterSettings = new MaliciousUriFilterSettings
+        {
+            FilterEnforcement = MaliciousUriFilterSettings
+                .Types
+                .MaliciousUriFilterEnforcement
+                .Enabled,
+        };
+
+        return template;
+    }
+
+    public Template ConfigureTemplateWithPiAndJailbreak()
+    {
+        Template template = ConfigureBaseTemplate();
+
+        template.FilterConfig.PiAndJailbreakFilterSettings = new PiAndJailbreakFilterSettings
+        {
+            ConfidenceLevel = DetectionConfidenceLevel.MediumAndAbove,
+            FilterEnforcement = PiAndJailbreakFilterSettings
+                .Types
+                .PiAndJailbreakFilterEnforcement
+                .Enabled,
+        };
+        return template;
+    }
+
     // Create a template on GCP and register it for cleanup
     public Template CreateTemplate(Template templateConfig, string templateId = null)
     {
@@ -283,6 +386,18 @@ public class ModelArmorFixture : IDisposable, ICollectionFixture<ModelArmorFixtu
     public Template CreateTemplateWithLabels(string templateId = null)
     {
         Template templateConfig = ConfigureBaseTemplateWithLabels();
+        return CreateTemplate(templateConfig, templateId);
+    }
+
+    public Template CreateTemplateWithMaliciousUri(string templateId = null)
+    {
+        Template templateConfig = ConfigureTemplateWithMaliciousUri();
+        return CreateTemplate(templateConfig, templateId);
+    }
+
+    public Template CreateTemplateWithPiAndJailbreak(string templateId = null)
+    {
+        Template templateConfig = ConfigureTemplateWithPiAndJailbreak();
         return CreateTemplate(templateConfig, templateId);
     }
 
